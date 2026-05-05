@@ -9,16 +9,17 @@ import random
 import string
 from flask import request, jsonify
 
+import os
 
 # ================= INIT =================
 app = Flask(__name__)
 CORS(app)
 
 # ================= MYSQL CONFIG =================
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Abhay@123'
-app.config['MYSQL_DB'] = 'parksmart'
+app.config['MYSQL_HOST'] = os.environ.get('DB_HOST', 'localhost')
+app.config['MYSQL_USER'] = os.environ.get('DB_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD', 'Abhay@123')
+app.config['MYSQL_DB'] = os.environ.get('DB_NAME', 'parksmart')
 
 mysql = MySQL(app)
 
