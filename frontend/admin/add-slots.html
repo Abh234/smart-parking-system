@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Slots</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-slate-100">
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 text-white p-5">
+    <h2 class="text-2xl font-bold mb-6 cursor-pointer" onclick="goDashboard()">Admin Panel</h2>
+    <ul class="space-y-3">
+      <li onclick="goDashboard()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Dashboard</li>
+      <li onclick="goUsers()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Users</li>
+      <li onclick="goSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Slots</li>
+      <li onclick="goAddSlots()" class="bg-white/10 p-3 rounded-xl cursor-pointer">Add Slots</li>
+      <li onclick="goBookings()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Bookings</li>
+      <li onclick="goPayments()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Payments</li>
+      <li onclick="goReports()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Reports</li>
+      <li onclick="logout()" class="hover:bg-red-500 p-3 rounded-xl cursor-pointer">Logout</li>
+    </ul>
+  </aside>
+
+  <main class="flex-1">
+    <header class="bg-blue-700 text-white p-5 shadow-lg">
+      <h1 class="text-3xl font-bold">Add Slots</h1>
+      <p class="text-blue-100 text-sm mt-1">Create and save new parking slots into MySQL.</p>
+    </header>
+
+    <section class="p-6 grid xl:grid-cols-[0.9fr_1.1fr] gap-6">
+      <div class="bg-white border border-slate-200 rounded-3xl p-6">
+        <h2 class="text-xl font-bold">Create New Slot</h2>
+
+        <div class="space-y-4 mt-5">
+          <div>
+            <label class="text-sm text-slate-600">Parking ID</label>
+            <input id="parkingId" type="number" placeholder="1"
+              class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+          </div>
+
+          <div>
+            <label class="text-sm text-slate-600">Slot Name</label>
+            <input id="slotName" type="text" placeholder="A1"
+              class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+          </div>
+
+          <div>
+            <label class="text-sm text-slate-600">Price Per Hour</label>
+            <input id="slotPrice" type="number" placeholder="50"
+              class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+          </div>
+
+          <div>
+            <label class="text-sm text-slate-600">Status</label>
+            <select id="slotStatus"
+              class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+              <option value="available">Available</option>
+              <option value="booked">Booked</option>
+            </select>
+          </div>
+
+          <button onclick="addSlot()"
+            class="w-full bg-blue-700 text-white py-3 rounded-2xl font-semibold hover:bg-blue-800 transition">
+            Add Slot
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-6">
+        <h2 class="text-xl font-bold">Live Preview</h2>
+
+        <div id="slotPreview" class="mt-6 rounded-3xl bg-slate-50 border border-slate-200 p-5">
+          <p class="text-sm text-slate-500">Live Preview</p>
+          <p class="text-2xl font-bold mt-2">Slot --</p>
+          <p class="mt-2">Parking ID: --</p>
+          <p class="mt-2">Price: Rs. 0.00/hr</p>
+          <p class="mt-2 text-sm">Status: available</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const admin = JSON.parse(localStorage.getItem("admin") || "null");
+
+if (!admin) window.location.href = "admin-login.html";
+
+["parkingId", "slotName", "slotPrice", "slotStatus"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", updatePreview);
+  document.getElementById(id).addEventListener("change", updatePreview);
+});
+
+function updatePreview() {
+  const parkingId = document.getElementById("parkingId").value || "--";
+  const name = document.getElementById("slotName").value || "--";
+  const price = Number(document.getElementById("slotPrice").value || 0).toFixed(2);
+  const status = document.getElementById("slotStatus").value;
+
+  document.getElementById("slotPreview").innerHTML = `
+    <p class="text-sm text-slate-500">Live Preview</p>
+    <p class="text-2xl font-bold mt-2">Slot ${name}</p>
+    <p class="mt-2">Parking ID: ${parkingId}</p>
+    <p class="mt-2">Price: Rs. ${price}/hr</p>
+    <p class="mt-2 text-sm">Status: ${status}</p>
+  `;
+}
+
+async function addSlot() {
+  const parkingId = document.getElementById("parkingId").value.trim();
+  const slotName = document.getElementById("slotName").value.trim();
+  const slotPrice = document.getElementById("slotPrice").value.trim();
+  const slotStatus = document.getElementById("slotStatus").value;
+
+  if (!parkingId || !slotName || !slotPrice) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  if (Number(slotPrice) <= 0) {
+    alert("Price must be greater than 0");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/slots`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        parking_id: parkingId,
+        slot_name: slotName,
+        price: slotPrice,
+        status: slotStatus
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Slot added successfully");
+      document.getElementById("parkingId").value = "";
+      document.getElementById("slotName").value = "";
+      document.getElementById("slotPrice").value = "";
+      document.getElementById("slotStatus").value = "available";
+      updatePreview();
+    } else {
+      alert(data.message || data.error || "Failed to add slot");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Server error");
+  }
+}
+
+function goDashboard() { window.location.href = "admin-dashboard.html"; }
+function goUsers() { window.location.href = "users.html"; }
+function goSlots() { window.location.href = "slots.html"; }
+function goAddSlots() { window.location.href = "add-slots.html"; }
+function goBookings() { window.location.href = "bookings.html"; }
+function goPayments() { window.location.href = "payments.html"; }
+function goReports() { window.location.href = "reports.html"; }
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "admin-login.html";
+}
+
+updatePreview();
+</script>
+</body>
+</html>

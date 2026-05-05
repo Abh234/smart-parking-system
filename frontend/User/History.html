@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking History</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+}
+</style>
+</head>
+<body class="min-h-screen bg-slate-100 p-6">
+
+<div class="max-w-7xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900">Booking History</h1>
+      <p class="text-slate-500 mt-1">Your booking and payment records in one place.</p>
+    </div>
+
+    <div class="flex gap-3">
+      <a href="dashboard.html" class="bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-800">
+        Back To Dashboard
+      </a>
+      <a href="manage_bookings.html" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700">
+        My Bookings
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl shadow p-5">
+      <p class="text-sm text-slate-500">Total History Records</p>
+      <p id="historyCount" class="text-3xl font-bold text-slate-900 mt-2">0</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow p-5">
+      <p class="text-sm text-slate-500">Paid Payments</p>
+      <p id="paidCount" class="text-3xl font-bold text-emerald-600 mt-2">0</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow p-5">
+      <p class="text-sm text-slate-500">Total Amount</p>
+      <p id="totalAmount" class="text-3xl font-bold text-blue-700 mt-2">Rs. 0.00</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+    <div class="p-5 border-b">
+      <h2 class="text-xl font-bold text-slate-900">History Details</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-700">
+          <tr>
+            <th class="text-left p-4">Booking ID</th>
+            <th class="text-left p-4">Slot</th>
+            <th class="text-left p-4">Vehicle</th>
+            <th class="text-left p-4">Date</th>
+            <th class="text-left p-4">Time</th>
+            <th class="text-left p-4">Booking Status</th>
+            <th class="text-left p-4">Payment</th>
+            <th class="text-left p-4">Amount</th>
+            <th class="text-left p-4">Reference</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+
+function formatCurrency(amount, currency = "INR") {
+  if (currency === "INR") {
+    return `Rs. ${Number(amount || 0).toFixed(2)}`;
+  }
+  return `${currency} ${Number(amount || 0).toFixed(2)}`;
+}
+
+function statusBadge(status, goodClass, badClass) {
+  const normalized = String(status || "").toLowerCase();
+  const isGood = normalized === "paid" || normalized === "booked";
+  const badgeClass = isGood ? goodClass : badClass;
+  return `<span class="px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}">${status || "-"}</span>`;
+}
+
+async function loadHistory() {
+  const email = localStorage.getItem("email");
+
+  if (!email || email === "null" || email === "undefined") {
+    window.location.href = "../login.html";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/history?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    const table = document.getElementById("historyTable");
+
+    table.innerHTML = "";
+
+    if (!data.success || !data.history || data.history.length === 0) {
+      document.getElementById("historyCount").innerText = "0";
+      document.getElementById("paidCount").innerText = "0";
+      document.getElementById("totalAmount").innerText = "Rs. 0.00";
+      table.innerHTML = `
+        <tr>
+          <td colspan="9" class="p-6 text-center text-slate-500">No history found</td>
+        </tr>
+      `;
+      return;
+    }
+
+    let paidCount = 0;
+    let totalAmount = 0;
+
+    data.history.forEach(item => {
+      if ((item.payment_status || "").toLowerCase() === "paid") {
+        paidCount += 1;
+      }
+      totalAmount += Number(item.amount || 0);
+
+      table.innerHTML += `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-semibold text-slate-900">${item.booking_id}</td>
+          <td class="p-4">${item.slot_name || "-"}</td>
+          <td class="p-4">
+            <div>${item.vehicle_type || "-"}</div>
+            <div class="text-slate-500">${item.vehicle_number || "-"}</div>
+          </td>
+          <td class="p-4">${item.booking_date || "-"}</td>
+          <td class="p-4">${item.start_time || "-"} - ${item.end_time || "-"}</td>
+          <td class="p-4">${statusBadge(item.booking_status, "bg-blue-100 text-blue-700", "bg-red-100 text-red-700")}</td>
+          <td class="p-4">${statusBadge(item.payment_status, "bg-emerald-100 text-emerald-700", "bg-amber-100 text-amber-700")}<div class="text-slate-500 mt-1">${item.payment_method || "-"}</div></td>
+          <td class="p-4 font-semibold">${formatCurrency(item.amount, item.currency)}</td>
+          <td class="p-4">
+            <div>${item.payment_id || "-"}</div>
+            <div class="text-slate-500 text-xs mt-1">${item.order_id || "-"}</div>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("historyCount").innerText = data.history.length;
+    document.getElementById("paidCount").innerText = paidCount;
+    document.getElementById("totalAmount").innerText = formatCurrency(totalAmount);
+  } catch (error) {
+    console.error(error);
+    alert("Unable to load history");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadHistory);
+</script>
+
+</body>
+</html>

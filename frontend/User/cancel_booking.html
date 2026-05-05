@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cancel Booking</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 text-white min-h-screen flex items-center justify-center">
+
+<div class="max-w-md w-full bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl">
+
+  <h2 class="text-2xl font-bold text-center mb-6 text-cyan-300">
+     Cancel Your Booking
+  </h2>
+
+  <!-- FORM -->
+  <div class="space-y-4">
+
+    <input type="number" id="bookingId"
+      placeholder="Enter Booking ID"
+      class="w-full p-3 rounded-lg text-black focus:ring-2 focus:ring-red-400">
+
+    <input type="email" id="email"
+      placeholder="Enter Registered Email"
+      class="w-full p-3 rounded-lg text-black focus:ring-2 focus:ring-red-400">
+
+    <button onclick="cancelBooking()"
+      class="w-full bg-gradient-to-r from-red-500 to-pink-500 py-3 rounded-lg font-semibold hover:scale-105 transition">
+      Cancel Booking
+    </button>
+
+    <p id="msg" class="text-center font-semibold"></p>
+
+  </div>
+
+  <!-- BACK -->
+  <div class="text-center mt-6">
+    <a href="cancel_rules.html"
+       class="text-cyan-300 hover:underline">
+       ← Back to Rules
+    </a>
+  </div>
+
+</div>
+
+<script>
+
+// AUTO FILL
+const params = new URLSearchParams(window.location.search);
+const bookingIdFromURL = params.get("id");
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  if (bookingIdFromURL) {
+    document.getElementById("bookingId").value = bookingIdFromURL;
+  }
+
+  const savedEmail = localStorage.getItem("email");
+  if (savedEmail) {
+    document.getElementById("email").value = savedEmail;
+  }
+});
+
+// CANCEL FUNCTION
+async function cancelBooking() {
+
+  const bookingId = document.getElementById("bookingId").value;
+  const email = document.getElementById("email").value;
+
+  if (!bookingId || !email) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  if (!confirm("Are you sure you want to cancel?")) return;
+
+  try {
+
+    const res = await fetch(
+      `http://127.0.0.1:5000/api/cancel/${bookingId}?email=${email}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      document.getElementById("msg").innerHTML =
+        "<span class='text-green-400'>✅ Booking Cancelled Successfully</span>";
+
+      // 🔥 REDIRECT AFTER SUCCESS
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
+
+    } else {
+      document.getElementById("msg").innerHTML =
+        `<span class='text-red-400'>❌ ${data.message}</span>`;
+    }
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("msg").innerHTML =
+      "<span class='text-red-400'>❌ Server Error</span>";
+  }
+}
+
+</script>
+</body>
+</html>

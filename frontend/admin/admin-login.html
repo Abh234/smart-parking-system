@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - ParkSmart</title>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+
+  <!-- Container -->
+  <div class="flex w-full max-w-4xl bg-gray-800 shadow-2xl rounded-lg overflow-hidden">
+
+    <!-- Left -->
+    <div class="w-1/2 bg-blue-900 flex flex-col justify-center items-center p-8">
+      <h1 class="text-4xl font-bold mb-4">ParkSmart</h1>
+      <p class="text-gray-300 text-center">
+        Smart Parking System for easy booking and management of parking slots.
+      </p>
+    </div>
+
+    <!-- Right -->
+    <div class="w-1/2 p-8">
+
+      <h2 class="text-2xl font-semibold mb-6">Login</h2>
+
+      <form class="space-y-5">
+
+        <!-- Email -->
+        <div>
+          <label class="text-gray-400 text-sm">Email</label>
+          <div class="flex items-center bg-gray-700 rounded px-3 py-2 mt-1">
+            <i class="fas fa-envelope text-blue-400 mr-2"></i>
+            <input type="email" id="email" placeholder="Enter email"
+              class="bg-transparent outline-none w-full text-white"/>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="text-gray-400 text-sm">Password</label>
+          <div class="flex items-center bg-gray-700 rounded px-3 py-2 mt-1">
+            <i class="fas fa-lock text-blue-400 mr-2"></i>
+            <input type="password" id="password" placeholder="Enter password"
+              class="bg-transparent outline-none w-full text-white"/>
+          </div>
+        </div>
+
+        <!-- Role -->
+        <div class="text-gray-300">
+          <label class="mr-4">
+            <input type="radio" name="role" value="user" checked> User
+          </label>
+          <label>
+            <input type="radio" name="role" value="admin"> Admin
+          </label>
+        </div>
+
+        <!-- Button -->
+        <button type="button" onclick="login()"
+          class="w-full bg-blue-600 py-2 rounded font-semibold hover:bg-blue-700 transition">
+          Login
+        </button>
+
+      </form>
+
+      <!-- Links -->
+      <p class="text-sm text-gray-400 mt-4">
+        Forgot password?
+        <a href="forgotpassword.html" class="text-blue-400 hover:underline">Click here</a>
+      </p>
+
+      <p class="text-sm text-gray-400 mt-2">
+        Don’t have an account?
+        <a href="admin-register.html" class="text-green-400 hover:underline">Register</a>
+      </p>
+
+    </div>
+
+  </div>
+
+  <!-- ✅ UPDATED JS -->
+  <script>
+async function login() {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    alert("Fill all fields");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/admin/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Login Success ✅");
+
+      localStorage.setItem("admin", JSON.stringify(data.admin));
+
+      window.location.href = "admin-dashboard.html";
+    } else {
+      alert(data.message);
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Server Error ❌");
+  }
+}
+</script>
+
+</body>
+</html>

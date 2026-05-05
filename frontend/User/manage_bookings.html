@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Bookings</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex flex-col items-center p-6">
+
+<div class="w-full max-w-6xl bg-white shadow-lg rounded-lg p-6">
+  <h2 class="text-2xl font-bold mb-4 text-center">
+    🚗 My Booked Slots
+  </h2>
+
+  <table class="w-full border text-center">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="border p-2">Slot ID</th>
+        <th class="border p-2">Vehicle Type</th>
+        <th class="border p-2">Vehicle Number</th>
+        <th class="border p-2">Date</th>
+        <th class="border p-2">Start</th>
+        <th class="border p-2">End</th>
+        <th class="border p-2">Status</th>
+        <th class="border p-2">Action</th>
+      </tr>
+    </thead>
+    <tbody id="bookingList"></tbody>
+  </table>
+
+</div>
+
+<script>
+
+const email = localStorage.getItem("email");
+
+// ✅ LOGIN CHECK
+if (!email) {
+  alert("Please login first");
+  window.location.href = "login.html";
+}
+
+// ================= FETCH BOOKINGS =================
+async function loadBookings() {
+
+  try {
+    console.log("EMAIL:", email);
+
+    const res = await fetch(`http://127.0.0.1:5000/api/my-bookings?email=${email}`);
+
+    if (!res.ok) {
+      throw new Error("Server not responding");
+    }
+
+    const data = await res.json();
+    console.log("DATA:", data);
+
+    const table = document.getElementById("bookingList");
+    table.innerHTML = "";
+
+    // ✅ NO DATA
+    if (!data.success || !data.bookings || data.bookings.length === 0) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="8" class="p-3 text-gray-500">
+            No bookings found
+          </td>
+        </tr>`;
+      return;
+    }
+
+    // ✅ LOOP BOOKINGS
+    data.bookings.forEach(b => {
+
+      table.innerHTML += `
+        <tr>
+          <td class="border p-2">${b.slot_name || '-'}</td>
+          <td class="border p-2">${b.vehicle_type || '-'}</td>
+          <td class="border p-2">${b.vehicle_number || '-'}</td>
+          <td class="border p-2">${b.booking_date || '-'}</td>
+          <td class="border p-2">${b.start_time || '-'}</td>
+          <td class="border p-2">${b.end_time || '-'}</td>
+          <td class="border p-2 ${b.status === 'cancelled' ? 'text-red-500' : 'text-green-600'}">
+            ${b.status || 'Booked'}
+          </td>
+          <td class="border p-2">
+            ${
+              b.status !== 'cancelled'
+              ? `<button onclick="goToCancelRules(${b.booking_id})"
+                  class="text-red-600 hover:underline font-semibold">
+                  Cancel
+                </button>`
+              : '<span class="text-gray-400">—</span>'
+            }
+          </td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    console.error("ERROR:", err);
+    alert("Error loading bookings");
+  }
+}
+
+// ================= REDIRECT TO RULES =================
+function goToCancelRules(bookingId) {
+  window.location.href = `cancel_rules.html?id=${bookingId}`;
+}
+
+// ================= LOAD PAGE =================
+window.onload = loadBookings;
+
+</script>
+
+</body>
+</html>

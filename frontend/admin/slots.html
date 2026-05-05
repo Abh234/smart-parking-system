@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Slots</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-slate-100">
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 text-white p-5">
+    <h2 class="text-2xl font-bold mb-6 cursor-pointer" onclick="goDashboard()">Admin Panel</h2>
+    <ul class="space-y-3">
+      <li onclick="goDashboard()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Dashboard</li>
+      <li onclick="goUsers()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Users</li>
+      <li onclick="goSlots()" class="bg-white/10 p-3 rounded-xl cursor-pointer">Manage Slots</li>
+      <li onclick="goAddSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Add Slots</li>
+      <li onclick="goBookings()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Bookings</li>
+      <li onclick="goPayments()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Payments</li>
+      <li onclick="goReports()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Reports</li>
+      <li onclick="logout()" class="hover:bg-red-500 p-3 rounded-xl cursor-pointer">Logout</li>
+    </ul>
+  </aside>
+
+  <main class="flex-1">
+    <header class="bg-blue-700 text-white p-5 shadow-lg flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Manage Slots</h1>
+        <p class="text-blue-100 text-sm mt-1">Live slot data from MySQL.</p>
+      </div>
+      <button onclick="loadSlots()" class="bg-white text-blue-700 px-4 py-2 rounded-xl font-semibold">Refresh</button>
+    </header>
+
+    <section class="p-6">
+      <div class="grid md:grid-cols-3 gap-5 mb-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Slots</p>
+          <p id="slotCount" class="text-4xl font-bold mt-2">0</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Available</p>
+          <p id="availableCount" class="text-4xl font-bold mt-2 text-emerald-600">0</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Booked</p>
+          <p id="bookedCount" class="text-4xl font-bold mt-2 text-rose-600">0</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-slate-200">
+          <h2 class="text-xl font-bold">Slot Inventory</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="p-4">Slot ID</th>
+                <th class="p-4">Parking ID</th>
+                <th class="p-4">Slot Name</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Price</th>
+              </tr>
+            </thead>
+            <tbody id="slotTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const admin = JSON.parse(localStorage.getItem("admin") || "null");
+
+if (!admin) window.location.href = "admin-login.html";
+
+async function loadSlots() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/slots`);
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || data.error || "Failed to load slots");
+      return;
+    }
+
+    const slots = data.slots || [];
+
+    document.getElementById("slotCount").innerText = slots.length;
+    document.getElementById("availableCount").innerText =
+      slots.filter((slot) => slot.status !== "booked").length;
+    document.getElementById("bookedCount").innerText =
+      slots.filter((slot) => slot.status === "booked").length;
+
+    document.getElementById("slotTable").innerHTML = slots.length
+      ? slots.map((slot) => `
+        <tr class="border-t border-slate-200">
+          <td class="p-4">${slot.slot_id}</td>
+          <td class="p-4">${slot.parking_id}</td>
+          <td class="p-4 font-semibold text-slate-900">${slot.slot_name}</td>
+          <td class="p-4">
+            <span class="${slot.status === "booked" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"} px-3 py-1 rounded-full text-sm capitalize">
+              ${slot.status}
+            </span>
+          </td>
+          <td class="p-4">Rs. ${Number(slot.price || 0).toFixed(2)}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="5" class="p-6 text-center text-slate-500">No slots found</td></tr>`;
+
+  } catch (error) {
+    console.error(error);
+    document.getElementById("slotTable").innerHTML =
+      `<tr><td colspan="5" class="p-6 text-center text-slate-500">Unable to load slots</td></tr>`;
+  }
+}
+
+function goDashboard() { window.location.href = "admin-dashboard.html"; }
+function goUsers() { window.location.href = "users.html"; }
+function goSlots() { window.location.href = "slots.html"; }
+function goAddSlots() { window.location.href = "add-slots.html"; }
+function goBookings() { window.location.href = "bookings.html"; }
+function goPayments() { window.location.href = "payments.html"; }
+function goReports() { window.location.href = "reports.html"; }
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "admin-login.html";
+}
+
+window.onload = loadSlots;
+</script>
+</body>
+</html>

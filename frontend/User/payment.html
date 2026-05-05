@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+}
+.wallet-option input:checked + div {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-700 p-6">
+
+<div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-3xl shadow-2xl p-8">
+    <h1 class="text-3xl font-bold text-slate-900">Confirm Payment</h1>
+    <p class="text-slate-500 mt-2">Booking details are auto-filled from the previous page.</p>
+
+    <div class="mt-6 space-y-3 text-sm">
+      <div class="flex justify-between"><span>Slot ID</span><span id="slotIdText"></span></div>
+      <div class="flex justify-between"><span>Vehicle Type</span><span id="vehicleTypeText"></span></div>
+      <div class="flex justify-between"><span>Vehicle Number</span><span id="vehicleNumberText"></span></div>
+      <div class="flex justify-between"><span>Date</span><span id="dateText"></span></div>
+      <div class="flex justify-between"><span>Start Time</span><span id="startText"></span></div>
+      <div class="flex justify-between"><span>End Time</span><span id="endText"></span></div>
+      <div class="flex justify-between"><span>Duration</span><span id="hoursText"></span></div>
+    </div>
+
+    <div class="mt-8 rounded-2xl bg-blue-50 p-5">
+      <h3 class="font-bold text-blue-700">Payment Process</h3>
+      <ul class="mt-3 space-y-2 text-sm text-slate-700">
+        <li>1. Select wallet option</li>
+        <li>2. Scan QR or pay using UPI app</li>
+        <li>3. Enter payer name</li>
+        <li>4. Backend saves booking and payment</li>
+        <li>5. Slot status changes to booked</li>
+        <li>6. Redirect to success page</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-2xl p-8">
+    <h2 class="text-2xl font-bold text-slate-900">Payment Panel</h2>
+
+    <div class="mt-6 space-y-3">
+      <div class="flex justify-between"><span>Price Per Hour</span><span id="basePrice"></span></div>
+      <div class="flex justify-between"><span>Hours</span><span id="hoursPay"></span></div>
+      <div class="flex justify-between"><span>Subtotal</span><span id="subtotal"></span></div>
+      <div class="flex justify-between"><span>Platform Fee</span><span>Rs. 20.00</span></div>
+      <div class="flex justify-between"><span>GST (18%)</span><span id="gst"></span></div>
+      <div class="border-t pt-4 flex justify-between text-xl font-bold">
+        <span>Total</span>
+        <span id="totalAmount"></span>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <h3 class="text-lg font-bold text-slate-900 mb-4">Choose Wallet / UPI App</h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="wallet-option cursor-pointer">
+          <input type="radio" name="wallet" value="phonepe_manual" class="hidden" checked>
+          <div class="border-2 rounded-2xl p-4 text-center font-semibold">PhonePe</div>
+        </label>
+
+        <label class="wallet-option cursor-pointer">
+          <input type="radio" name="wallet" value="googlepay_manual" class="hidden">
+          <div class="border-2 rounded-2xl p-4 text-center font-semibold">Google Pay</div>
+        </label>
+
+        <label class="wallet-option cursor-pointer">
+          <input type="radio" name="wallet" value="paytm_manual" class="hidden">
+          <div class="border-2 rounded-2xl p-4 text-center font-semibold">Paytm</div>
+        </label>
+
+        <label class="wallet-option cursor-pointer">
+          <input type="radio" name="wallet" value="other_upi_manual" class="hidden">
+          <div class="border-2 rounded-2xl p-4 text-center font-semibold">Other UPI</div>
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-8 rounded-2xl bg-violet-50 p-5">
+      <div class="flex justify-between mb-2">
+        <span class="font-semibold">UPI ID</span>
+        <span class="font-semibold" id="upiIdText">parksmart@ibl</span>
+      </div>
+      <p class="text-sm text-slate-600 mb-4">
+        Scan this QR in PhonePe, Google Pay, Paytm, or any UPI app.
+      </p>
+
+      <div class="bg-white rounded-2xl p-4 flex justify-center">
+        <img id="qrImage" alt="UPI QR Code" class="w-56 h-56 rounded-xl border">
+      </div>
+    </div>
+
+    <div class="mt-6 space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-gray-600">Payer Name</label>
+        <input id="payerName" type="text" placeholder="Enter your name"
+          class="w-full p-3 border rounded-lg mt-2 focus:ring-2 focus:ring-blue-400 outline-none">
+      </div>
+    </div>
+
+    <div class="mt-8 space-y-3">
+      <button onclick="confirmPayment()" id="payBtn"
+        class="w-full bg-gradient-to-r from-green-600 to-emerald-700 text-white py-3 rounded-2xl font-semibold">
+        Pay Now
+      </button>
+
+      <button onclick="goToFailed('Payment cancelled by user')"
+        class="w-full bg-rose-500 text-white py-3 rounded-2xl font-semibold">
+        Cancel Payment
+      </button>
+
+      <button onclick="goBack()"
+        class="w-full bg-gray-500 text-white py-3 rounded-2xl font-semibold">
+        Back
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const booking = JSON.parse(localStorage.getItem("pendingBooking") || "null");
+const upiId = "parksmart@ibl";
+
+if (!booking) {
+  alert("No booking data found");
+  window.location.href = "book_now.html";
+}
+
+const price = Number(booking.price);
+const hours = Number(booking.hours);
+const subtotal = price * hours;
+const platformFee = 20;
+const gst = Number(((subtotal + platformFee) * 0.18).toFixed(2));
+const total = Number((subtotal + platformFee + gst).toFixed(2));
+
+document.getElementById("slotIdText").innerText = booking.slot_id;
+document.getElementById("vehicleTypeText").innerText = booking.vehicle_type;
+document.getElementById("vehicleNumberText").innerText = booking.vehicle_number;
+document.getElementById("dateText").innerText = booking.date;
+document.getElementById("startText").innerText = booking.start_time;
+document.getElementById("endText").innerText = booking.end_time;
+document.getElementById("hoursText").innerText = booking.hours + " hour(s)";
+document.getElementById("basePrice").innerText = "Rs. " + price.toFixed(2);
+document.getElementById("hoursPay").innerText = booking.hours;
+document.getElementById("subtotal").innerText = "Rs. " + subtotal.toFixed(2);
+document.getElementById("gst").innerText = "Rs. " + gst.toFixed(2);
+document.getElementById("totalAmount").innerText = "Rs. " + total.toFixed(2);
+
+const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("Smart Parking System")}&am=${encodeURIComponent(total.toFixed(2))}&cu=INR&tn=${encodeURIComponent("Parking Slot Booking")}`;
+document.getElementById("qrImage").src =
+  `https://quickchart.io/qr?text=${encodeURIComponent(upiString)}&size=250`;
+
+async function confirmPayment() {
+  const payerName = document.getElementById("payerName").value.trim();
+  const btn = document.getElementById("payBtn");
+  const wallet = document.querySelector('input[name="wallet"]:checked').value;
+
+  if (!payerName) {
+    alert("Enter payer name");
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+
+    const res = await fetch(`${API_BASE}/api/payment/phonepe/confirm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ...booking,
+        payer_name: payerName,
+        payment_method: wallet
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem("latestPayment", JSON.stringify({
+        booking_id: data.booking_id,
+        slot_name: data.slot_name,
+        amount_paid: data.amount_paid,
+        payment_id: data.upi_reference,
+        payment_method: data.payment_method
+      }));
+
+      localStorage.removeItem("pendingBooking");
+      window.location.href = `payment-processing.html?booking_id=${data.booking_id}`;
+    } else {
+      goToFailed(data.message || data.error || "Payment failed");
+    }
+  } catch (error) {
+    console.error(error);
+    goToFailed("Server error");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Pay Now";
+  }
+}
+
+function goToFailed(message) {
+  localStorage.setItem("paymentFailure", JSON.stringify({ message }));
+  window.location.href = "payment-failed.html";
+}
+
+function goBack() {
+  window.history.back();
+}
+</script>
+
+</body>
+</html>

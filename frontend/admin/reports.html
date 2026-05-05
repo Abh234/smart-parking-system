@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-slate-100">
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 text-white p-5">
+    <h2 class="text-2xl font-bold mb-6 cursor-pointer" onclick="goDashboard()">Admin Panel</h2>
+    <ul class="space-y-3">
+      <li onclick="goDashboard()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Dashboard</li>
+      <li onclick="goUsers()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Users</li>
+      <li onclick="goSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Slots</li>
+      <li onclick="goAddSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Add Slots</li>
+      <li onclick="goBookings()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Bookings</li>
+      <li onclick="goPayments()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Payments</li>
+      <li onclick="goReports()" class="bg-white/10 p-3 rounded-xl cursor-pointer">Reports</li>
+      <li onclick="logout()" class="hover:bg-red-500 p-3 rounded-xl cursor-pointer">Logout</li>
+    </ul>
+  </aside>
+
+  <main class="flex-1">
+    <header class="bg-blue-700 text-white p-5 shadow-lg flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Reports</h1>
+        <p class="text-blue-100 text-sm mt-1">Month-wise and year-wise export reports for the full parking system.</p>
+      </div>
+      <button onclick="loadReports()" class="bg-white text-blue-700 px-4 py-2 rounded-xl font-semibold">Refresh</button>
+    </header>
+
+    <section class="p-6">
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 mb-6">
+        <h2 class="text-xl font-bold">Filter Reports</h2>
+        <div class="grid md:grid-cols-4 gap-4 mt-5">
+          <div>
+            <label class="text-sm text-slate-600">Month</label>
+            <select id="monthFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+              <option value="">All</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm text-slate-600">Year</label>
+            <input id="yearFilter" type="number" placeholder="2026"
+              class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none">
+          </div>
+
+          <div class="flex items-end">
+            <button onclick="loadReports()" class="w-full bg-blue-700 text-white py-3 rounded-2xl font-semibold">
+              Apply Filter
+            </button>
+          </div>
+
+          <div class="flex items-end">
+            <button onclick="resetFilters()" class="w-full bg-slate-700 text-white py-3 rounded-2xl font-semibold">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Users</p>
+          <p id="totalUsers" class="text-4xl font-bold mt-2">0</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Slots</p>
+          <p id="totalSlots" class="text-4xl font-bold mt-2">0</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Bookings</p>
+          <p id="totalBookings" class="text-4xl font-bold mt-2">0</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Revenue</p>
+          <p id="totalRevenue" class="text-4xl font-bold mt-2">Rs. 0.00</p>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold">Users Report</h2>
+              <p class="text-sm text-slate-500 mt-1">Download filtered user data</p>
+            </div>
+            <button onclick="downloadReport('users')" class="bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold">Export CSV</button>
+          </div>
+          <div class="mt-4 text-slate-600">
+            <p>Total Users: <span id="usersReportCount" class="font-semibold">0</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold">Slots Report</h2>
+              <p class="text-sm text-slate-500 mt-1">Download filtered slot data</p>
+            </div>
+            <button onclick="downloadReport('slots')" class="bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold">Export CSV</button>
+          </div>
+          <div class="mt-4 text-slate-600">
+            <p>Total Slots: <span id="slotsReportCount" class="font-semibold">0</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold">Bookings Report</h2>
+              <p class="text-sm text-slate-500 mt-1">Download filtered booking data</p>
+            </div>
+            <button onclick="downloadReport('bookings')" class="bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold">Export CSV</button>
+          </div>
+          <div class="mt-4 text-slate-600">
+            <p>Total Bookings: <span id="bookingsReportCount" class="font-semibold">0</span></p>
+            <p>Cancelled: <span id="cancelledReportCount" class="font-semibold">0</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-bold">Payments Report</h2>
+              <p class="text-sm text-slate-500 mt-1">Download filtered payment data</p>
+            </div>
+            <button onclick="downloadReport('payments')" class="bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold">Export CSV</button>
+          </div>
+          <div class="mt-4 text-slate-600">
+            <p>Total Payments: <span id="paymentsReportCount" class="font-semibold">0</span></p>
+            <p>Revenue: <span id="paymentsRevenue" class="font-semibold">Rs. 0.00</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const admin = JSON.parse(localStorage.getItem("admin") || "null");
+
+if (!admin) window.location.href = "admin-login.html";
+
+function getQueryParams() {
+  const month = document.getElementById("monthFilter").value;
+  const year = document.getElementById("yearFilter").value;
+
+  const params = new URLSearchParams();
+  if (month) params.append("month", month);
+  if (year) params.append("year", year);
+  return params.toString();
+}
+
+async function loadReports() {
+  try {
+    const query = getQueryParams();
+    const res = await fetch(`${API_BASE}/api/admin/reports${query ? `?${query}` : ""}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || data.error || "Failed to load reports");
+      return;
+    }
+
+    const report = data.report;
+
+    document.getElementById("totalUsers").innerText = report.total_users;
+    document.getElementById("totalSlots").innerText = report.total_slots;
+    document.getElementById("totalBookings").innerText = report.total_bookings;
+    document.getElementById("totalRevenue").innerText = `Rs. ${Number(report.total_revenue || 0).toFixed(2)}`;
+
+    document.getElementById("usersReportCount").innerText = report.total_users;
+    document.getElementById("slotsReportCount").innerText = report.total_slots;
+    document.getElementById("bookingsReportCount").innerText = report.total_bookings;
+    document.getElementById("cancelledReportCount").innerText = report.cancelled_bookings;
+    document.getElementById("paymentsReportCount").innerText = report.total_payments;
+    document.getElementById("paymentsRevenue").innerText = `Rs. ${Number(report.total_revenue || 0).toFixed(2)}`;
+  } catch (error) {
+    console.error(error);
+    alert("Unable to load reports");
+  }
+}
+
+function downloadReport(type) {
+  const query = getQueryParams();
+  const url = `${API_BASE}/api/admin/reports/export/${type}${query ? `?${query}` : ""}`;
+  window.open(url, "_blank");
+}
+
+function resetFilters() {
+  document.getElementById("monthFilter").value = "";
+  document.getElementById("yearFilter").value = "";
+  loadReports();
+}
+
+function goDashboard() { window.location.href = "admin-dashboard.html"; }
+function goUsers() { window.location.href = "users.html"; }
+function goSlots() { window.location.href = "slots.html"; }
+function goAddSlots() { window.location.href = "add-slots.html"; }
+function goBookings() { window.location.href = "bookings.html"; }
+function goPayments() { window.location.href = "payments.html"; }
+function goReports() { window.location.href = "reports.html"; }
+function logout() { localStorage.removeItem("admin"); window.location.href = "admin-login.html"; }
+
+window.onload = loadReports;
+</script>
+</body>
+</html>

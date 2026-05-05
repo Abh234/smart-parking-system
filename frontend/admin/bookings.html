@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookings</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-slate-100">
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 text-white p-5">
+    <h2 class="text-2xl font-bold mb-6 cursor-pointer" onclick="goDashboard()">Admin Panel</h2>
+    <ul class="space-y-3">
+      <li onclick="goDashboard()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Dashboard</li>
+      <li onclick="goUsers()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Users</li>
+      <li onclick="goSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Manage Slots</li>
+      <li onclick="goAddSlots()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Add Slots</li>
+      <li onclick="goBookings()" class="bg-white/10 p-3 rounded-xl cursor-pointer">Bookings</li>
+      <li onclick="goPayments()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Payments</li>
+      <li onclick="goReports()" class="hover:bg-white/10 p-3 rounded-xl cursor-pointer">Reports</li>
+      <li onclick="logout()" class="hover:bg-red-500 p-3 rounded-xl cursor-pointer">Logout</li>
+    </ul>
+  </aside>
+
+  <main class="flex-1">
+    <header class="bg-blue-700 text-white p-5 shadow-lg flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Bookings</h1>
+        <p class="text-blue-100 text-sm mt-1">Real-time booking records from MySQL.</p>
+      </div>
+      <button onclick="loadBookings()" class="bg-white text-blue-700 px-4 py-2 rounded-xl font-semibold">Refresh</button>
+    </header>
+
+    <section class="p-6">
+      <div class="grid md:grid-cols-3 gap-5 mb-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Total Bookings</p>
+          <p id="totalBookings" class="text-4xl font-bold mt-2">0</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Booked</p>
+          <p id="bookedBookings" class="text-4xl font-bold mt-2 text-emerald-600">0</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-5">
+          <p class="text-sm text-slate-500">Cancelled</p>
+          <p id="cancelledBookings" class="text-4xl font-bold mt-2 text-rose-600">0</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-slate-200">
+          <h2 class="text-xl font-bold">Booking Records</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="p-4">Booking ID</th>
+                <th class="p-4">User ID</th>
+                <th class="p-4">Slot ID</th>
+                <th class="p-4">Vehicle Type</th>
+                <th class="p-4">Vehicle Number</th>
+                <th class="p-4">Booking Date</th>
+                <th class="p-4">Start Time</th>
+                <th class="p-4">End Time</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Created At</th>
+              </tr>
+            </thead>
+            <tbody id="bookingTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const admin = JSON.parse(localStorage.getItem("admin") || "null");
+
+if (!admin) window.location.href = "admin-login.html";
+
+async function loadBookings() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/bookings`);
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || data.error || "Failed to load bookings");
+      return;
+    }
+
+    const bookings = data.bookings || [];
+
+    document.getElementById("totalBookings").innerText = bookings.length;
+    document.getElementById("bookedBookings").innerText =
+      bookings.filter((b) => b.status === "booked").length;
+    document.getElementById("cancelledBookings").innerText =
+      bookings.filter((b) => b.status === "cancelled").length;
+
+    document.getElementById("bookingTable").innerHTML = bookings.length
+      ? bookings.map((b) => `
+        <tr class="border-t border-slate-200">
+          <td class="p-4">${b.booking_id}</td>
+          <td class="p-4">${b.user_id}</td>
+          <td class="p-4">${b.slot_id}</td>
+          <td class="p-4">${b.vehicle_type}</td>
+          <td class="p-4">${b.vehicle_number}</td>
+          <td class="p-4">${b.booking_date}</td>
+          <td class="p-4">${b.start_time}</td>
+          <td class="p-4">${b.end_time}</td>
+          <td class="p-4">
+            <span class="${b.status === "cancelled" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"} px-3 py-1 rounded-full text-sm capitalize">
+              ${b.status}
+            </span>
+          </td>
+          <td class="p-4">${b.created_at}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="10" class="p-6 text-center text-slate-500">No bookings found</td></tr>`;
+
+  } catch (error) {
+    console.error(error);
+    document.getElementById("bookingTable").innerHTML =
+      `<tr><td colspan="10" class="p-6 text-center text-slate-500">Unable to load bookings</td></tr>`;
+  }
+}
+
+function goDashboard() { window.location.href = "admin-dashboard.html"; }
+function goUsers() { window.location.href = "users.html"; }
+function goSlots() { window.location.href = "slots.html"; }
+function goAddSlots() { window.location.href = "add-slots.html"; }
+function goBookings() { window.location.href = "bookings.html"; }
+function goPayments() { window.location.href = "payments.html"; }
+function goReports() { window.location.href = "reports.html"; }
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "admin-login.html";
+}
+
+window.onload = loadBookings;
+</script>
+</body>
+</html>

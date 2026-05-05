@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="flex bg-gray-100">
+
+<!-- SIDEBAR -->
+<div class="w-64 bg-gradient-to-b from-gray-900 to-blue-900 text-white min-h-screen p-5">
+  <h2 class="text-xl font-bold mb-6 cursor-pointer" onclick="goDashboard()">🚗 Admin Panel</h2>
+
+  <ul class="space-y-4">
+  <li onclick="goDashboard()" class="bg-gray-700 p-3 rounded-lg cursor-pointer">Dashboard</li>
+  <li onclick="goUsers()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Manage Users</li>
+  <li onclick="goSlots()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Manage Slots</li>
+  <li onclick="goAddSlots()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Add Slots</li>
+  <li onclick="goBookings()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Bookings</li>
+  <li onclick="goPayments()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Payments</li>
+  <li onclick="goReports()" class="hover:bg-gray-700 p-3 rounded-lg cursor-pointer">Reports</li>
+  <li onclick="logout()" class="hover:bg-red-500 p-3 rounded-lg cursor-pointer">Logout</li>
+</ul>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1">
+
+  <!-- HEADER -->
+  <div class="bg-blue-600 text-white p-4 flex justify-between items-center shadow">
+    <h1 class="text-2xl font-bold cursor-pointer" onclick="goDashboard()">Smart Parking Admin</h1>
+    <div class="flex items-center gap-2 cursor-pointer" onclick="goLogin()">
+      <i class="fa fa-user-circle text-2xl"></i>
+      <span>Admin</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+
+    <div class="grid grid-cols-3 gap-6">
+
+      <div class="card bg-indigo-500">
+        <i class="fa fa-users"></i>
+        <h2>Total Users</h2>
+        <p id="totalUsers">0</p>
+      </div>
+
+      <div class="card bg-purple-500">
+        <i class="fa fa-car"></i>
+        <h2>Total Slots</h2>
+        <p id="totalSlots">0</p>
+      </div>
+
+      <div class="card bg-green-500">
+        <i class="fa fa-check-circle"></i>
+        <h2>Available Slots</h2>
+        <p id="availableSlots">0</p>
+      </div>
+
+      <div class="card bg-blue-600">
+        <i class="fa fa-parking"></i>
+        <h2>Booked Slots</h2>
+        <p id="bookedSlots">0</p>
+      </div>
+
+      <div class="card bg-red-500">
+        <i class="fa fa-times-circle"></i>
+        <h2>Cancelled Bookings</h2>
+        <p id="cancelledBookings">0</p>
+      </div>
+
+      <div class="card bg-pink-500">
+        <i class="fa fa-money-bill-wave"></i>
+        <h2>Total Revenue</h2>
+        <p id="totalRevenue">₹0</p>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+.card {
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  font-size: 18px;
+  transition: 0.3s;
+}
+.card i {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.card p {
+  font-size: 28px;
+  font-weight: bold;
+}
+.card:hover {
+  transform: scale(1.05);
+}
+</style>
+
+<script>
+
+// ================= LOAD DATA =================
+async function loadDashboard() {
+    try {
+        const res = await fetch("http://localhost:5000/api/dashboard");
+        const data = await res.json();
+
+        document.getElementById("totalUsers").innerText = data.total_users;
+        document.getElementById("totalSlots").innerText = data.total_slots;
+        document.getElementById("availableSlots").innerText = data.available_slots;
+        document.getElementById("bookedSlots").innerText = data.booked_slots;
+        document.getElementById("cancelledBookings").innerText = data.cancelled_bookings;
+        document.getElementById("totalRevenue").innerText = "₹" + data.total_revenue;
+
+    } catch (err) {
+        console.error("Dashboard error:", err);
+    }
+}
+
+// ================= NAVIGATION =================
+
+// ================= NAVIGATION =================
+function goDashboard() {
+    window.location.href = "dashboard.html";
+}
+
+function goUsers() {
+    window.location.href = "users.html";
+}
+
+function goSlots() {
+    window.location.href = "slots.html";
+}
+
+function goAddSlots() {
+    window.location.href = "add-slots.html";
+}
+
+function goBookings() {
+    window.location.href = "bookings.html";
+}
+
+function goPayments() {
+    window.location.href = "payments.html";
+}
+
+function goReports() { 
+    window.location.href = "reports.html";
+}
+
+function goLogin() {
+    window.location.href = "admin-login.html";
+}
+
+function logout() {
+    alert("Logged out!");
+    window.location.href = "admin-login.html";
+}
+
+function goLogin() {
+    window.location.href = "admin-login.html";
+}
+
+function goDashboard() {
+    window.location.href = "dashboard.html";
+}
+
+function logout() {
+    alert("Logged out!");
+    window.location.href = "admin-login.html";
+}
+
+// ================= INIT =================
+window.onload = loadDashboard;
+setInterval(loadDashboard, 10000);
+
+</script>
+
+</body>
+</html>

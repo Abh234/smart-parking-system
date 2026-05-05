@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ParkSmart Dashboard</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+
+<style>
+#map {
+  height: 350px;
+  width: 100%;
+  border-radius: 12px;
+}
+</style>
+</head>
+
+<body class="bg-gray-100">
+<div class="flex h-screen">
+  <aside class="w-64 bg-gray-900 text-white flex flex-col p-5">
+    <h2 class="text-2xl font-bold mb-6 text-center">ParkSmart</h2>
+
+    <nav class="space-y-3">
+      <a href="dashboard.html" class="block bg-gray-800 p-2 rounded">
+        <i class="fas fa-home mr-2"></i> Dashboard
+      </a>
+      <a href="History.html" class="block p-2 rounded hover:bg-gray-700">
+        <i class="fas fa-history mr-2"></i> History
+      </a>
+      <a href="manage_bookings.html" class="block p-2 rounded hover:bg-gray-700">
+        <i class="fas fa-car mr-2"></i> My Vehicles
+      </a>
+    </nav>
+
+    <div class="mt-6 flex-1 overflow-y-auto">
+      <h3 class="text-sm font-semibold mb-2">Recent Searches</h3>
+      <ul id="historyList" class="space-y-1 text-xs"></ul>
+    </div>
+
+    <button id="logoutBtn" class="mt-4 bg-red-500 py-2 rounded hover:bg-red-700">
+      Logout
+    </button>
+  </aside>
+
+  <div class="flex-1 flex flex-col">
+    <header class="bg-white shadow p-4 flex justify-between items-center">
+      <h1 class="text-xl font-semibold">
+        Welcome, <span id="username" class="text-blue-600"></span>
+      </h1>
+
+      <div class="space-x-2">
+        <button id="bookSlotBtn" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+          Book Slot
+        </button>
+        <button id="myBookingBtn" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+          My Bookings
+        </button>
+      </div>
+    </header>
+
+    <main class="p-6 space-y-6 overflow-y-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h3 class="text-gray-500 text-sm">Total Bookings</h3>
+          <p id="totalBookings" class="text-2xl font-bold mt-2">0</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h3 class="text-gray-500 text-sm">Active Parking</h3>
+          <p id="activeParking" class="text-2xl font-bold mt-2">0</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h3 class="text-gray-500 text-sm">Wallet Balance</h3>
+          <p id="walletBalance" class="text-2xl font-bold mt-2">Rs. 0.00</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h2 class="text-lg font-semibold mb-3">Find Parking Location</h2>
+        <div class="flex">
+          <input
+            id="locationSearch"
+            class="w-full px-4 py-2 border rounded-l-lg outline-none"
+            placeholder="Search city or area..."
+          />
+          <button
+            onclick="searchLocation()"
+            class="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700"
+          >
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h2 class="text-lg font-semibold mb-3">Parking Map</h2>
+        <div id="map"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+let map;
+let marker = null;
+
+function formatCurrency(amount) {
+  return `Rs. ${Number(amount || 0).toFixed(2)}`;
+}
+
+function initMap() {
+  map = L.map("map").setView([20.5937, 78.9629], 5);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(map);
+}
+
+async function loadDashboardStats(email) {
+  try {
+    const res = await fetch(`${API_BASE}/api/user-dashboard?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error(data.message || data.error);
+      return;
+    }
+
+    document.getElementById("totalBookings").innerText = data.total_bookings || 0;
+    document.getElementById("activeParking").innerText = data.active_parking || 0;
+    document.getElementById("walletBalance").innerText = formatCurrency(data.wallet_balance);
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+  }
+}
+
+function searchLocation() {
+  const input = document.getElementById("locationSearch").value;
+
+  if (!input) {
+    alert("Enter location first");
+    return;
+  }
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.length === 0) {
+        alert("Location not found");
+        return;
+      }
+
+      const lat = data[0].lat;
+      const lon = data[0].lon;
+
+      map.setView([lat, lon], 14);
+
+      if (marker) {
+        map.removeLayer(marker);
+      }
+
+      marker = L.marker([lat, lon]).addTo(map)
+        .bindPopup(input)
+        .openPopup();
+
+      saveHistory(input);
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Location search failed");
+    });
+}
+
+function saveHistory(name) {
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+
+  if (!history.includes(name)) {
+    history.push(name);
+    localStorage.setItem("history", JSON.stringify(history));
+  }
+
+  loadHistory();
+}
+
+function loadHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
+
+  const history = JSON.parse(localStorage.getItem("history")) || [];
+
+  history.forEach(name => {
+    const li = document.createElement("li");
+    li.innerText = name;
+    li.className = "bg-gray-700 p-1 rounded cursor-pointer hover:bg-gray-600";
+
+    li.onclick = () => {
+      document.getElementById("locationSearch").value = name;
+      searchLocation();
+    };
+
+    list.appendChild(li);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const email = localStorage.getItem("email");
+
+  if (!email || email === "null" || email === "undefined") {
+    window.location.href = "../login.html";
+    return;
+  }
+
+  document.getElementById("username").innerText = email;
+
+  initMap();
+  loadHistory();
+  loadDashboardStats(email);
+
+  document.getElementById("bookSlotBtn").onclick = () => {
+    window.location.href = "slot_booking.html";
+  };
+
+  document.getElementById("myBookingBtn").onclick = () => {
+    window.location.href = "manage_bookings.html";
+  };
+
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.clear();
+    window.location.href = "../index.html";
+  };
+
+  setInterval(() => loadDashboardStats(email), 5000);
+});
+</script>
+</body>
+</html>

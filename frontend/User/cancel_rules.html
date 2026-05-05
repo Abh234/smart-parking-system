@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cancellation Policy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 text-white min-h-screen flex items-center justify-center">
+
+<div class="max-w-3xl w-full bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl">
+
+  <h2 class="text-3xl font-bold text-center mb-6 text-cyan-300">
+    🚗 Parking Cancellation Policy
+  </h2>
+
+  <div class="space-y-4 text-left">
+
+    <div>
+      <h3 class="font-semibold text-lg text-yellow-300">1. Confirmed Bookings</h3>
+      <ul class="ml-4 list-disc">
+        <li>More than 24 hours → ✅ Full refund (₹10 fee)</li>
+        <li>6–24 hours → ⚠️ 50% refund</li>
+        <li>Less than 6 hours → ❌ No refund</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="font-semibold text-lg text-yellow-300">2. Waitlisted Bookings</h3>
+      <ul class="ml-4 list-disc">
+        <li>Before confirmation → Full refund</li>
+        <li>After confirmation → Follow standard policy</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="font-semibold text-lg text-yellow-300">3. No Show</h3>
+      <ul class="ml-4 list-disc">
+        <li>No check-in → No refund</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="font-semibold text-lg text-yellow-300">4. System Issues</h3>
+      <ul class="ml-4 list-disc">
+        <li>System failure → Full refund automatically</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="font-semibold text-lg text-yellow-300">5. Parking Rules</h3>
+      <ul class="ml-4 list-disc">
+        <li>Park only in assigned slot</li>
+        <li>Overstay → Extra charges apply</li>
+        <li>Follow security & CCTV monitoring</li>
+        <li>No illegal parking allowed</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- 🔥 UPDATED BUTTON -->
+  <div class="text-center mt-6">
+    <a id="cancelBtn"
+       class="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-3 rounded-lg font-semibold hover:scale-105 transition">
+       Cancel My Booking
+    </a>
+  </div>
+
+</div>
+
+<!-- 🔥 SCRIPT ADDED -->
+<script>
+
+// GET booking ID from URL
+const params = new URLSearchParams(window.location.search);
+const bookingId = params.get("id");
+
+// CHECK IF ID EXISTS
+if (!bookingId) {
+  alert("Invalid booking request");
+}
+
+// SET NEXT PAGE WITH ID
+document.getElementById("cancelBtn").href =
+  `cancel_booking.html?id=${bookingId}`;
+
+</script>
+
+</body>
+</html>

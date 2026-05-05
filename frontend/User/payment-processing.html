@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processing Payment</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: "Poppins", sans-serif; }
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center p-6">
+  <div class="bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center">
+    <div class="w-20 h-20 mx-auto rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+    <h1 class="text-4xl font-bold text-blue-700 mt-6">Processing Booking</h1>
+    <p class="text-gray-600 mt-3">We are saving your payment details, creating your booking, and blocking the slot.</p>
+
+    <div class="mt-8 bg-slate-50 rounded-2xl p-5 text-left">
+      <p class="font-semibold text-slate-900">Flow in progress</p>
+      <ul class="mt-3 space-y-2 text-sm text-slate-700">
+        <li>PhonePe payment details received</li>
+        <li>Backend checking booking record</li>
+        <li>Payment being saved in MySQL</li>
+        <li>Slot status being updated</li>
+        <li>Redirecting to success page</li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+const API_BASE = "http://127.0.0.1:5000";
+const bookingId = new URLSearchParams(window.location.search).get("booking_id");
+
+async function checkStatus() {
+  if (!bookingId) {
+    localStorage.setItem("paymentFailure", JSON.stringify({ message: "Missing booking id" }));
+    window.location.href = "payment-failed.html";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/payment/status/${bookingId}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      localStorage.setItem("paymentFailure", JSON.stringify({
+        message: data.message || data.error || "Unable to fetch payment status"
+      }));
+      window.location.href = "payment-failed.html";
+      return;
+    }
+
+    if ((data.payment.status || "").toLowerCase() === "paid") {
+      const latestPayment = JSON.parse(localStorage.getItem("latestPayment") || "{}");
+      localStorage.setItem("latestPayment", JSON.stringify({
+        ...latestPayment,
+        booking_id: data.booking_id,
+        slot_name: data.slot_name,
+        amount_paid: data.payment.amount,
+        payment_id: data.payment.payment_id,
+        payment_method: data.payment.payment_method || data.payment.provider || "phonepe_manual"
+      }));
+
+      setTimeout(() => {
+        window.location.href = `payment-success.html?booking_id=${encodeURIComponent(bookingId)}`;
+      }, 1200);
+    } else {
+      localStorage.setItem("paymentFailure", JSON.stringify({
+        message: "Payment status is not completed"
+      }));
+      window.location.href = "payment-failed.html";
+    }
+  } catch (error) {
+    console.error(error);
+    localStorage.setItem("paymentFailure", JSON.stringify({
+      message: "Server error while checking payment status"
+    }));
+    window.location.href = "payment-failed.html";
+  }
+}
+
+checkStatus();
+</script>
+</body>
+</html>
