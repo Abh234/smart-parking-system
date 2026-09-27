@@ -1,1 +1,1 @@
-window.PARKSMART_API_BASE = "http://127.0.0.1:5000";
+window.PARKSMART_API_BASE = "https://smart-parking-system-backend-uudr.onrender.com";
