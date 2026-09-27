@@ -5,3 +5,4 @@ __pycache__/
 Database/*.sql
 !Database/schema.sql
 venv/
+backend/New Text Document.txt
