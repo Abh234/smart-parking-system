@@ -14,6 +14,7 @@ body {
   background: #eff6ff;
 }
 </style>
+<script src="../api-config.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-700 p-6">
 
@@ -128,7 +129,7 @@ body {
 </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = window.PARKSMART_API_BASE;
 const booking = JSON.parse(localStorage.getItem("pendingBooking") || "null");
 const upiId = "parksmart@ibl";
 

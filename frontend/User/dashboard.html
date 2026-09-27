@@ -17,6 +17,7 @@
   border-radius: 12px;
 }
 </style>
+<script src="../api-config.js"></script>
 </head>
 
 <body class="bg-gray-100">
@@ -106,7 +107,7 @@
 </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = window.PARKSMART_API_BASE;
 let map;
 let marker = null;
 

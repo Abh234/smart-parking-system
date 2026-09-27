@@ -8,6 +8,7 @@
 <style>
 body { font-family: "Poppins", sans-serif; }
 </style>
+<script src="../api-config.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center p-6">
   <div class="bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center">
@@ -28,7 +29,7 @@ body { font-family: "Poppins", sans-serif; }
   </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = window.PARKSMART_API_BASE;
 const bookingId = new URLSearchParams(window.location.search).get("booking_id");
 
 async function checkStatus() {

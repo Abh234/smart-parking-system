@@ -10,15 +10,36 @@ import string
 from flask import request, jsonify
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ================= HELPERS =================
+def get_table_columns(cur, table_name):
+    cur.execute(f"SHOW COLUMNS FROM {table_name}")
+    return [row[0] for row in cur.fetchall()]
+
+
+def first_existing(columns, candidates):
+    column_set = set(columns)
+    for candidate in candidates:
+        if candidate in column_set:
+            return candidate
+    return None
 
 # ================= INIT =================
 app = Flask(__name__)
-CORS(app)
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get('FRONTEND_ORIGIN', '*').split(',')
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 # ================= MYSQL CONFIG =================
 app.config['MYSQL_HOST'] = os.environ.get('DB_HOST', 'localhost')
 app.config['MYSQL_USER'] = os.environ.get('DB_USER', 'root')
-app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD', 'Abhay@123')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD', '')
 app.config['MYSQL_DB'] = os.environ.get('DB_NAME', 'parksmart')
 
 mysql = MySQL(app)
@@ -26,7 +47,7 @@ mysql = MySQL(app)
 # ================= HOME =================
 @app.route('/')
 def home():
-    return "✅ ParkSmart Backend Running"
+    return "ParkSmart Backend Running"
 
 # ================= TEST =================
 @app.route('/test')
@@ -1302,4 +1323,5 @@ def payment_status(booking_id):
 
 # ================= RUN =================
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", debug=False, port=port)

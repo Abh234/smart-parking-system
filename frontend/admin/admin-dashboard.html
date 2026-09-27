@@ -5,6 +5,7 @@
 <title>Admin Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="../api-config.js"></script>
 </head>
 
 <body class="flex bg-gray-100">
@@ -111,7 +112,7 @@
 // ================= LOAD DATA =================
 async function loadDashboard() {
     try {
-        const res = await fetch("http://localhost:5000/api/dashboard");
+        const res = await fetch(`${window.PARKSMART_API_BASE}/api/dashboard`);
         const data = await res.json();
 
         document.getElementById("totalUsers").innerText = data.total_users;

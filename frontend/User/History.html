@@ -10,6 +10,7 @@ body {
   font-family: "Poppins", sans-serif;
 }
 </style>
+<script src="../api-config.js"></script>
 </head>
 <body class="min-h-screen bg-slate-100 p-6">
 
@@ -74,7 +75,7 @@ body {
 </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = window.PARKSMART_API_BASE;
 
 function formatCurrency(amount, currency = "INR") {
   if (currency === "INR") {

@@ -10,6 +10,7 @@
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<script src="api-config.js"></script>
 </head>
 
 <body class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -98,7 +99,7 @@
   }
 
   try {
-    const response = await fetch("http://127.0.0.1:5000/api/login", {
+    const response = await fetch(`${window.PARKSMART_API_BASE}/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

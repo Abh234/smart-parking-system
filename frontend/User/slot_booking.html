@@ -19,6 +19,7 @@
     }
     .dropdown:hover .dropdown-content { display: block; }
   </style>
+<script src="../api-config.js"></script>
 </head>
 
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
@@ -83,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------------- FETCH SLOTS ----------------
 async function fetchSlots() {
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/slots");
+    const res = await fetch(`${window.PARKSMART_API_BASE}/api/slots`);
     const data = await res.json();
 
     const container = document.getElementById("parkingSlots");

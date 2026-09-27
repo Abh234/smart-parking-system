@@ -6,6 +6,7 @@
 <title>Bookings</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="../api-config.js"></script>
 </head>
 <body class="min-h-screen bg-slate-100">
 <div class="flex min-h-screen">
@@ -80,7 +81,7 @@
 </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = window.PARKSMART_API_BASE;
 const admin = JSON.parse(localStorage.getItem("admin") || "null");
 
 if (!admin) window.location.href = "admin-login.html";
